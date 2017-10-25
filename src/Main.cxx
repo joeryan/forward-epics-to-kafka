@@ -93,11 +93,16 @@ Main::Main(MainOpt &opt)
     SetUpListener();
   }
   if (main_opt.json) {
+    string creator;
+    auto m3 = main_opt.json->FindMember("creator");
+    if (m3->value.IsString()) {
+      creator = string(m3->value.GetString());
+    }
     auto m1 = main_opt.json->FindMember("streams");
     if (m1 != main_opt.json->MemberEnd()) {
       if (m1->value.IsArray()) {
         for (auto &m : m1->value.GetArray()) {
-          mapping_add(m);
+          mapping_add(m, creator);
         }
       }
     }
@@ -166,13 +171,18 @@ void ConfigCB::operator()(std::string const &msg) {
   }
   string cmd = m1->value.GetString();
   if (cmd == "add") {
+    string creator;
+    auto m3 = j0.FindMember("creator");
+    if (m3->value.IsString()) {
+      creator = string(m3->value.GetString());
+    }
     auto m2 = j0.FindMember("streams");
     if (m2 == j0.MemberEnd()) {
       return;
     }
     if (m2->value.IsArray()) {
       for (auto &x : m2->value.GetArray()) {
-        main.mapping_add(x);
+        main.mapping_add(x, creator);
       }
     }
   }
@@ -353,7 +363,7 @@ void Main::report_stats(int dt) {
   }
 }
 
-int Main::mapping_add(rapidjson::Value &mapping) {
+int Main::mapping_add(rapidjson::Value &mapping, std::string creator) {
   using std::string;
   string channel = get_string(&mapping, "channel");
   string channel_provider_type = get_string(&mapping, "channel_provider_type");
@@ -373,7 +383,7 @@ int Main::mapping_add(rapidjson::Value &mapping) {
   }
   auto stream = streams.back();
   {
-    auto push_conv = [this, &stream](rapidjson::Value &c) {
+    auto push_conv = [this, &stream](rapidjson::Value &c, string creator) {
       string schema = get_string(&c, "schema");
       string cname = get_string(&c, "name");
       string topic = get_string(&c, "topic");
@@ -423,16 +433,16 @@ int Main::mapping_add(rapidjson::Value &mapping) {
       if (!conv) {
         LOG(3, "can not create a converter");
       }
-      stream->converter_add(*kafka_instance_set, conv, topic_uri);
+      stream->converter_add(*kafka_instance_set, conv, topic_uri, creator);
     };
     auto mconv = mapping.FindMember("converter");
     if (mconv != mapping.MemberEnd()) {
       auto &conv = mconv->value;
       if (conv.IsObject()) {
-        push_conv(conv);
+        push_conv(conv, creator);
       } else if (conv.IsArray()) {
         for (auto &c : conv.GetArray()) {
-          push_conv(c);
+          push_conv(c, creator);
         }
       }
     }

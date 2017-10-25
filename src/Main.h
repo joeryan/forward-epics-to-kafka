@@ -34,7 +34,7 @@ public:
   Main(MainOpt &opt);
   ~Main();
   void forward_epics_to_kafka();
-  int mapping_add(rapidjson::Value &mapping);
+  int mapping_add(rapidjson::Value &mapping, std::string creator);
   void forwarding_exit();
   void report_status();
   void report_stats(int started_in_current_round);

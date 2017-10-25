@@ -36,7 +36,7 @@ A combination of a converter and a kafka output destination.
 class ConversionPath {
 public:
   ConversionPath(ConversionPath &&x);
-  ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>);
+  ConversionPath(std::shared_ptr<Converter>, std::unique_ptr<KafkaOutput>, std::string creator);
   ~ConversionPath();
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   std::atomic<uint32_t> transit{0};
@@ -45,6 +45,7 @@ public:
 private:
   std::shared_ptr<Converter> converter;
   std::unique_ptr<KafkaOutput> kafka_output;
+  std::string creator;
 };
 
 /**
@@ -56,7 +57,7 @@ public:
   Stream(Stream &&) = delete;
   ~Stream();
   int converter_add(Kafka::InstanceSet &kset, std::shared_ptr<Converter> conv,
-                    uri::URI uri_kafka_output);
+                    uri::URI uri_kafka_output, std::string creator);
   int emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up);
   int32_t
   fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &queue,

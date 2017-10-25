@@ -15,8 +15,8 @@ ConversionPath::ConversionPath(ConversionPath &&x)
       kafka_output(std::move(x.kafka_output)) {}
 
 ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
-                               std::unique_ptr<KafkaOutput> ko)
-    : converter(conv), kafka_output(std::move(ko)) {}
+                               std::unique_ptr<KafkaOutput> ko, std::string creator)
+    : converter(conv), kafka_output(std::move(ko)), creator(creator) {}
 
 ConversionPath::~ConversionPath() {
   LOG(7, "~ConversionPath");
@@ -52,6 +52,7 @@ rapidjson::Document ConversionPath::status_json() const {
   jd.AddMember("broker",
                Value(kafka_output->pt.producer->opt.address.data(), a), a);
   jd.AddMember("topic", Value(kafka_output->topic_name().data(), a), a);
+  jd.AddMember("creator", Value(creator.c_str(), a), a);
   return jd;
 }
 
@@ -77,11 +78,11 @@ Stream::~Stream() {
 }
 
 int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
-                          uri::URI uri_kafka_output) {
+                          uri::URI uri_kafka_output, std::string creator) {
   auto pt = kset.producer_topic(uri_kafka_output);
   std::unique_ptr<ConversionPath> cp(new ConversionPath(
       {std::move(conv)},
-      std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt)))));
+      std::unique_ptr<KafkaOutput>(new KafkaOutput(std::move(pt))), creator));
   conversion_paths.push_back(std::move(cp));
   return 0;
 }
