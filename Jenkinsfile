@@ -43,7 +43,7 @@ node('docker') {
                     -DREQUIRE_GTEST=ON \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DCMAKE_SKIP_RPATH=FALSE \
-                    -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' \
+                    -DCMAKE_INSTALL_RPATH='\\\\\$ORIGIN/../lib' \
                     -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE \
                     -DCONAN_SET_OUTPUT_DIRS=ON
             \""""
