@@ -15,7 +15,7 @@ find_package(StaticData COMPONENTS "schema-config-global.json")
 find_package(GitCommitExtract)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fPIC")
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9.3")
 else ()
