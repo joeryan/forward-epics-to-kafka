@@ -49,7 +49,8 @@ node('docker') {
 
         stage('Build') {
             sh """docker exec ${container_name} sh -c \"
-                make --directory=./build VERBOSE=1
+                cd build
+                LD_LIBRARY_PATH=\$(pwd)/lib make VERBOSE=1
             \""""
         }
 
