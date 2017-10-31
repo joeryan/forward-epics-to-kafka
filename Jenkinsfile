@@ -4,6 +4,7 @@ def centos = docker.image('essdmscdm/centos-build-node:0.8.0')
 node('docker') {
     cleanWs()
 
+    def custom_sh = "/bin/bash"
     def container_name = "${project}-${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     def run_args = "\
         --name ${container_name} \
@@ -15,7 +16,7 @@ node('docker') {
         container = centos.run(run_args)
 
         stage('Checkout') {
-            sh """docker exec ${container_name} sh -c \"
+            sh """docker exec ${container_name} ${custom_sh} -c \"
                 git clone https://github.com/ess-dmsc/${project}.git \
                     --branch ${env.BRANCH_NAME}
                 git clone -b master https://github.com/ess-dmsc/streaming-data-types.git
@@ -24,7 +25,7 @@ node('docker') {
 
         stage('Get Dependencies') {
             def conan_remote = "ess-dmsc-local"
-            sh """docker exec ${container_name} sh -c \"
+            sh """docker exec ${container_name} ${custom_sh} -c \"
                 mkdir build
                 cd build
                 conan remote add \
@@ -36,7 +37,7 @@ node('docker') {
         }
 
         stage('Configure') {
-            sh """docker exec ${container_name} sh -c \"
+            sh """docker exec ${container_name} ${custom_sh} -c \"
                 cd build
                 cmake3 ../${project} \
                     -DREQUIRE_GTEST=ON \
@@ -49,7 +50,7 @@ node('docker') {
         }
 
         stage('Build') {
-            sh """docker exec ${container_name} sh -c \"
+            sh """docker exec ${container_name} ${custom_sh} -c \"
                 cd build
                 LD_LIBRARY_PATH=\\\$(pwd)/lib make VERBOSE=1
             \""""
@@ -57,7 +58,7 @@ node('docker') {
 
         stage('Test') {
             def test_output = "TestResults.xml"
-            sh """docker exec ${container_name} sh -c \"
+            sh """docker exec ${container_name} ${custom_sh} -c \"
                 cd build
                 ./bin/tests -- --gtest_output=xml:${test_output}
             \""""
@@ -72,7 +73,7 @@ node('docker') {
 
         stage('Archive') {
             def archive_output = "forward-epics-to-kafka-centos.tar.gz"
-            sh """docker exec ${container_name} ${sclsh} -c \"
+            sh """docker exec ${container_name} ${custom_sh} -c \"
                 cd build
                 rm -rf forward-epics-to-kafka; mkdir forward-epics-to-kafka
                 mkdir forward-epics-to-kafka/bin
