@@ -79,6 +79,7 @@ node('docker') {
                 mkdir forward-epics-to-kafka/bin
                 cp ./bin/forward-epics-to-kafka forward-epics-to-kafka/bin/
                 cp -r ./lib forward-epics-to-kafka/
+                cp -r ./licenses forward-epics-to-kafka/
                 tar czf ${archive_output} forward-epics-to-kafka
             \""""
             sh "docker cp \

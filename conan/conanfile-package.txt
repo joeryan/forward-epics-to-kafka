@@ -21,3 +21,4 @@ pcre:shared=True
 [imports]
 lib, *.dylib* -> ./lib
 lib, *.so* -> ./lib
+., LICENSE* -> ./licenses
