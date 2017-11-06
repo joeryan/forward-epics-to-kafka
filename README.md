@@ -62,15 +62,6 @@ make docs  # optional
 ```
 
 
-#### Running on macOS
-
-When using Conan on macOS, due to the way paths to dependencies are handled,
-the `activate_run.sh` file must be sourced before running the application. The
-`deactivate_run.sh` can be sourced to undo the changes afterwards. This has not
-been tested yet, and it is possible that EPICS libraries cannot be found.
-Please report any issues you encounter when running this setup.
-
-
 #### Dependencies in custom locations
 
 The `forward-epics-to-kafka` follows standard `CMake` conventions.
