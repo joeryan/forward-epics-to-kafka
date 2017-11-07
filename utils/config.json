@@ -1,9 +1,9 @@
 {
-	"broker": "localhost:9092",
+	"broker": "192.168.23.45:9092",
 	"streams": [
 		{
-			"channel": "SQ:AMOR:DIMETIX:DIST",
-			"converter": { "schema": "f142", "topic": "amor_sim" }
+			"channel": "testCounter",
+			"converter": { "schema": "f142", "topic": "epics_data" }
 		}
 	]
 }
