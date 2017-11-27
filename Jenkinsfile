@@ -86,6 +86,8 @@ node('docker') {
                 ${container_name}:/home/jenkins/build/${archive_output} ."
             archiveArtifacts "${archive_output}"
         }
+    } catch (e) {
+        failure_function(e, 'Failed to build.')
     } finally {
         container.stop()
     }
