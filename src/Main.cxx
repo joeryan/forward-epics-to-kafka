@@ -365,76 +365,82 @@ int Main::mapping_add(rapidjson::Value &mapping) {
     channel_provider_type = "pva";
   }
   std::unique_lock<std::mutex> lock(streams_mutex);
-  try {
-    ChannelInfo ci{channel_provider_type, channel};
-    streams.add(std::make_shared<Stream>(finfo, ci));
-  } catch (std::runtime_error &e) {
-    return -1;
+  Stream * stream_ptr = streams.find_stream(channel_provider_type, channel);
+  if (stream_ptr == nullptr) {
+    try {
+      ChannelInfo ci{channel_provider_type, channel};
+      streams.add(std::make_shared<Stream>(finfo, ci));
+      stream_ptr = streams.back().get();
+    } catch (std::runtime_error &e) {
+      return -1;
+    }
   }
-  auto stream = streams.back();
-  {
-    auto push_conv = [this, &stream](rapidjson::Value &c) {
-      string schema = get_string(&c, "schema");
-      string cname = get_string(&c, "name");
-      string topic = get_string(&c, "topic");
-      string creator = get_string(&c, "creator");
-      if (schema.size() == 0) {
-        LOG(3, "mapping schema is not specified");
-      }
-      if (topic.size() == 0) {
-        LOG(3, "mapping topic is not specified");
-      }
-      if (cname.size() == 0) {
-        cname = fmt::format("converter_{}", converter_ix++);
-      }
-      auto r1 = main_opt.schema_registry.items().find(schema);
-      if (r1 == main_opt.schema_registry.items().end()) {
-        LOG(3, "can not handle (yet?) schema id {}", schema);
-      }
-      uri::URI uri;
-      if (main_opt.brokers.size() > 0) {
-        uri = main_opt.brokers.at(0);
-      }
-      uri::URI topic_uri;
-      if (not uri.host.empty()) {
-        topic_uri.host = uri.host;
-      }
-      if (uri.port != 0) {
-        topic_uri.port = uri.port;
-      }
-      topic_uri.parse(topic);
-      Converter::sptr conv;
-      if (cname.size() > 0) {
-        auto lock = get_lock_converters();
-        auto c1 = converters.find(cname);
-        if (c1 != converters.end()) {
-          conv = c1->second.lock();
-          if (!conv) {
-            conv =
-                Converter::create(main_opt.schema_registry, schema, main_opt);
-            converters[cname] = std::weak_ptr<Converter>(conv);
-          }
-        } else {
-          conv = Converter::create(main_opt.schema_registry, schema, main_opt);
+  if (not stream_ptr) {
+    LOG(4, "can neither find nor create the Stream for {} {}", channel_provider_type, channel);
+    return -2;
+  }
+  auto push_conv = [this, &stream_ptr](rapidjson::Value &c) {
+    string schema = get_string(&c, "schema");
+    string cname = get_string(&c, "name");
+    string topic = get_string(&c, "topic");
+    string creator = get_string(&c, "creator");
+    if (schema.size() == 0) {
+      LOG(3, "mapping schema is not specified");
+    }
+    if (topic.size() == 0) {
+      LOG(3, "mapping topic is not specified");
+    }
+    if (cname.size() == 0) {
+      cname = fmt::format("converter_{}", converter_ix++);
+    }
+    auto r1 = main_opt.schema_registry.items().find(schema);
+    if (r1 == main_opt.schema_registry.items().end()) {
+      LOG(3, "can not handle (yet?) schema id {}", schema);
+    }
+    uri::URI uri;
+    if (main_opt.brokers.size() > 0) {
+      uri = main_opt.brokers.at(0);
+    }
+    uri::URI topic_uri;
+    if (not uri.host.empty()) {
+      topic_uri.host = uri.host;
+    }
+    if (uri.port != 0) {
+      topic_uri.port = uri.port;
+    }
+    topic_uri.parse(topic);
+    Converter::sptr conv;
+    if (cname.size() > 0) {
+      auto lock = get_lock_converters();
+      auto c1 = converters.find(cname);
+      if (c1 != converters.end()) {
+        conv = c1->second.lock();
+        if (!conv) {
+          conv =
+              Converter::create(main_opt.schema_registry, schema, main_opt);
           converters[cname] = std::weak_ptr<Converter>(conv);
         }
       } else {
         conv = Converter::create(main_opt.schema_registry, schema, main_opt);
+        converters[cname] = std::weak_ptr<Converter>(conv);
       }
-      if (!conv) {
-        LOG(3, "can not create a converter");
-      }
-      stream->converter_add(*kafka_instance_set, conv, topic_uri, creator);
-    };
-    auto mconv = mapping.FindMember("converter");
-    if (mconv != mapping.MemberEnd()) {
-      auto &conv = mconv->value;
-      if (conv.IsObject()) {
-        push_conv(conv);
-      } else if (conv.IsArray()) {
-        for (auto &c : conv.GetArray()) {
-          push_conv(c);
-        }
+    } else {
+      conv = Converter::create(main_opt.schema_registry, schema, main_opt);
+    }
+    if (!conv) {
+      LOG(3, "can not create a converter");
+      return;
+    }
+    stream_ptr->converter_add(*kafka_instance_set, conv, topic_uri, creator);
+  };
+  auto mconv = mapping.FindMember("converter");
+  if (mconv != mapping.MemberEnd()) {
+    auto &conv = mconv->value;
+    if (conv.IsObject()) {
+      push_conv(conv);
+    } else if (conv.IsArray()) {
+      for (auto &c : conv.GetArray()) {
+        push_conv(c);
       }
     }
   }
