@@ -111,6 +111,7 @@ Main::Main(MainOpt &opt)
         status_producer, main_opt.status_uri.topic);
   }
 }
+
 void Main::SetUpListener() {
   KafkaW::BrokerOpt broker_options;
   broker_options.conf_strings["group.id"] =
@@ -120,7 +121,7 @@ void Main::SetUpListener() {
   broker_options.poll_timeout_ms = 0;
 
   auto consumer_ptr = make_unique<KafkaW::Consumer>(broker_options);
-  consumer_ptr->topic = main_opt.broker_config.host;
+  consumer_ptr->add_topic(main_opt.broker_config.topic);
   config_listener = make_unique<Config::Listener>(move(consumer_ptr));
 }
 
