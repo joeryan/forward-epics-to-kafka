@@ -80,3 +80,13 @@ const std::vector<std::shared_ptr<BrightnESS::ForwardEpicsToKafka::Stream>> &
 Streams::get_streams() {
   return streams;
 }
+
+Stream * Streams::find_stream(std::string channel_provider_type, std::string channel_name) {
+  for (auto & s : streams) {
+    auto & ci = s->channel_info();
+    if (ci.provider_type == channel_provider_type && ci.channel_name == channel_name) {
+      return s.get();
+    }
+  }
+  return nullptr;
+}

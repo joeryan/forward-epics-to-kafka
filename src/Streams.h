@@ -22,6 +22,12 @@ public:
   void streams_clear();
   void check_stream_status();
   void add(std::shared_ptr<Stream> s);
+
+  /// Searches for an existing Stream with the same channel_provider_type (e.g.
+  /// 'pva' or 'ca') and the same channel_name and returns a pointer to it if
+  /// found, or nullptr else.
+  Stream * find_stream(std::string channel_provider_type, std::string channel_name);
+
   std::shared_ptr<Stream> back();
   std::shared_ptr<Stream> operator[](size_t s) { return streams.at(s); };
   const std::vector<std::shared_ptr<Stream>> &get_streams();
