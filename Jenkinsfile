@@ -1,5 +1,5 @@
 def project = "forward-epics-to-kafka"
-def centos = docker.image('essdmscdm/centos-build-node:0.8.0')
+def centos = docker.image('essdmscdm/centos7-build-node:1.0.1')
 
 def failure_function(exception_obj, failureMessage) {
     def toEmails = [[$class: 'DevelopersRecipientProvider']]
@@ -75,6 +75,13 @@ node('docker && eee') {
 
             junit "${test_output}"
         }
+
+        stage("${image_key}: Analyse") {
+          sh """docker exec ${container_name} sh -c \"
+            cd build
+            make cppcheck
+          \""""
+        }  // stage
 
         stage('Archive') {
             // Remove file outside container.
