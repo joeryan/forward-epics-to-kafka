@@ -76,7 +76,7 @@ node('docker && eee') {
             junit "${test_output}"
         }
 
-        stage("${image_key}: Analyse") {
+        stage("Analyse") {
           sh """docker exec ${container_name} sh -c \"
             cd build
             make cppcheck
