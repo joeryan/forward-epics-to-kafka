@@ -162,3 +162,5 @@ void log_kafka_gelf_stop() {}
 void fwd_graylog_logger_enable(std::string address) {
   DW::g__logger.fwd_graylog_logger_enable(address);
 }
+
+bool operator>=(int a, Sev b) { return a >= static_cast<int>(b); }

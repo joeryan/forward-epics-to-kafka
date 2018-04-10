@@ -11,7 +11,7 @@ KafkaOutput::KafkaOutput(KafkaW::Producer::Topic &&pt) : pt(std::move(pt)) {}
 
 int KafkaOutput::emit(BrightnESS::FlatBufs::FlatbufferMessage::uptr fb) {
   if (!fb) {
-    CLOG(8, 1, "KafkaOutput::emit  empty fb");
+    CLOG(Sev::Debug, 1, "KafkaOutput::emit  empty fb");
     return -1024;
   }
   auto m1 = fb->message();

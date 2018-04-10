@@ -88,11 +88,10 @@ void Consumer::process_msg(LogData const *fb) {
   process_msg_impl(fb);
   msgs_good += 1;
   if (false) {
-    // LOG(9, "Consumer got msg:  size: {}  fbid: {:.4}", m->size(), fbid);
     if (fb->value_type() == Value::ArrayDouble) {
       auto a1 = (ArrayDouble *)fb->value();
       for (uint32_t i1 = 0; i1 < a1->value()->Length(); ++i1) {
-        LOG(7, "{}", a1->value()->Get(i1));
+        LOG(Sev::Debug, "{}", a1->value()->Get(i1));
       }
     }
   }
@@ -135,8 +134,8 @@ int ConsumerVerifierDefaultCreate::create(deque<uptr<Consumer>> &consumers,
           uri::URI TopicURI(Topic);
           TopicURI.host = Tests::main_opt->brokers.at(0).host;
           TopicURI.port = Tests::main_opt->brokers.at(0).port;
-          LOG(7, "broker: {}  topic: {}  channel: {}", TopicURI.host_port,
-              TopicURI.topic, Channel);
+          LOG(Sev::Debug, "broker: {}  topic: {}  channel: {}",
+              TopicURI.host_port, TopicURI.topic, Channel);
           BrokerSettings.Address = TopicURI.host_port;
           consumers.push_back(
               uptr<Consumer>(new Consumer(BrokerSettings, TopicURI.topic)));
@@ -170,7 +169,7 @@ public:
 };
 
 void Remote_T::requirements() {
-  LOG(0,
+  LOG(Sev::Info,
       "\n\n"
       "This test requires two available Epics PV:\n"
       "1) Normative Types Array Double 'forwarder_test_nt_array_double'\n"
@@ -202,9 +201,10 @@ void Remote_T::simple_f142() {
     try {
       main.forward_epics_to_kafka();
     } catch (std::runtime_error &e) {
-      LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
+      LOG(Sev::Error, "CATCH runtime error in main watchdog thread: {}",
+          e.what());
     } catch (std::exception &e) {
-      LOG(0, "CATCH EXCEPTION in main watchdog thread");
+      LOG(Sev::Error, "CATCH EXCEPTION in main watchdog thread");
     }
   });
 
@@ -230,12 +230,12 @@ void Remote_T::simple_f142() {
   }
   ASSERT_GT(consumer.msgs_good, 0);
 
-  LOG(4, "All done, test exit");
+  LOG(Sev::Info, "All done, test exit");
 }
 
 void Remote_T::simple_f142_via_config_message(
     string cmd_msg_fname, ConsumerVerifier &consumer_verifier) {
-  LOG(3, "This test should complete within about 30 seconds.");
+  LOG(Sev::Info, "This test should complete within about 30 seconds.");
   // Make a sample configuration with two streams
   auto msg = gulp(cmd_msg_fname);
   using nlohmann::json;
@@ -254,7 +254,7 @@ void Remote_T::simple_f142_via_config_message(
       auto &c = *c_;
       unique_lock<mutex> lock(c.mx);
       c.cv.wait_for(lock, MS(100), [&c] { return c.catched_up == 1; });
-      LOG(7, "Consumer {} catched up", i1);
+      LOG(Sev::Debug, "Consumer {} catched up", i1);
       ++i1;
     }
   }
@@ -265,19 +265,21 @@ void Remote_T::simple_f142_via_config_message(
     try {
       main->forward_epics_to_kafka();
     } catch (std::runtime_error &e) {
-      LOG(0, "CATCH runtime error in main watchdog thread: {}", e.what());
+      LOG(Sev::Error, "CATCH runtime error in main watchdog thread: {}",
+          e.what());
     } catch (std::exception &e) {
-      LOG(0, "CATCH EXCEPTION in main watchdog thread");
+      LOG(Sev::Error, "CATCH EXCEPTION in main watchdog thread");
     }
-    LOG(7, "thr_forwarder done");
+    LOG(Sev::Debug, "thr_forwarder done");
   });
   if (!main->config_listener) {
-    LOG(0, "\n\nNOTE:  Please use --broker-config <//host[:port]/topic> of "
-           "your configuration topic.\n");
+    LOG(Sev::Error,
+        "\n\nNOTE:  Please use --broker-config <//host[:port]/topic> of "
+        "your configuration topic.\n");
   }
   ASSERT_NE(main->config_listener.get(), nullptr);
   main->config_listener->wait_for_connected(MS(1000));
-  LOG(7, "OK config listener connected");
+  LOG(Sev::Debug, "OK config listener connected");
   sleep_ms(1000);
 
   {
@@ -287,7 +289,7 @@ void Remote_T::simple_f142_via_config_message(
     KafkaW::ProducerTopic pt(pr, Tests::main_opt->BrokerConfig.topic);
     pt.produce((KafkaW::uchar *)msg.data(), msg.size());
   }
-  LOG(7, "CONFIG has been sent out...");
+  LOG(Sev::Debug, "CONFIG has been sent out...");
 
   // Let it do its thing for a few seconds...
   sleep_ms(20000);
@@ -310,7 +312,7 @@ void Remote_T::simple_f142_via_config_message(
       sleep_ms(100);
     }
     auto t2 = std::chrono::system_clock::now();
-    LOG(7, "Took Main {} ms to stop",
+    LOG(Sev::Debug, "Took Main {} ms to stop",
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
   }
   ASSERT_EQ(main->forwarding_status.load(), ForwardingStatus::STOPPED);
@@ -320,7 +322,7 @@ void Remote_T::simple_f142_via_config_message(
   }
   main.reset();
   sleep_ms(2000);
-  LOG(7, "Main should be dtored by now");
+  LOG(Sev::Debug, "Main should be dtored by now");
 
   for (auto &c : consumers) {
     c->do_run = 0;
@@ -333,7 +335,7 @@ void Remote_T::simple_f142_via_config_message(
 
   ASSERT_EQ(consumer_verifier.verify(consumers), 0);
 
-  LOG(4, "All done, test exit");
+  LOG(Sev::Info, "All done, test exit");
 }
 
 TEST_F(Remote_T, simple_f142) { Remote_T::simple_f142(); }
@@ -343,7 +345,7 @@ TEST_F(Remote_T, simple_f142_via_config_message) {
     int verify(deque<uptr<Consumer>> &consumers) {
       int ret = 0;
       for (auto &c : consumers) {
-        LOG(6, "Consumer received {} messages", c->msgs_good);
+        LOG(Sev::Debug, "Consumer received {} messages", c->msgs_good);
         if (c->msgs_good < 5) {
           ret = 1;
           requirements();
@@ -374,14 +376,15 @@ TEST_F(Remote_T, named_converter) {
       int ret = 0;
       for (auto &c_ : consumers) {
         auto &c = *(Cons *)c_.get();
-        LOG(6, "Consumer received {} messages", c.msgs_good);
+        LOG(Sev::Debug, "Consumer received {} messages", c.msgs_good);
         if (c.msgs_good < 5) {
           ret = 1;
           requirements();
         }
         if (c.had[0] < 8 || c.had[1] < 8) {
-          LOG(3, "The single converter instance did not receive messages from "
-                 "both channels");
+          LOG(Sev::Error,
+              "The single converter instance did not receive messages from "
+              "both channels");
           ret = 1;
         }
       }
@@ -401,7 +404,7 @@ TEST_F(Remote_T, different_brokers) {
       int ret = 0;
       for (auto &c_ : consumers) {
         auto &c = *c_.get();
-        LOG(6, "Consumer received {} messages", c.msgs_good);
+        LOG(Sev::Debug, "Consumer received {} messages", c.msgs_good);
         if (c.msgs_good < 5) {
           ret = 1;
           requirements();

@@ -275,8 +275,8 @@ void Main::report_stats(int dt) {
   b1 %= 1024;
   auto b3 = b2 / 1024;
   b2 %= 1024;
-  LOG(6, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3, b2,
-      b1);
+  LOG(Sev::Info, "dt: {:4}  m: {:4}.{:03}  b: {:3}.{:03}.{:03}", dt, m2, m1, b3,
+      b2, b1);
   if (CURLReporter::HaveCURL && main_opt.InfluxURI.size() != 0) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
@@ -297,7 +297,6 @@ void Main::report_stats(int dt) {
     }
     {
       auto lock = get_lock_converters();
-      LOG(6, "N converters: {}", converters.size());
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();

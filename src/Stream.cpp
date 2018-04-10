@@ -19,12 +19,12 @@ ConversionPath::ConversionPath(std::shared_ptr<Converter> conv,
     : converter(conv), kafka_output(std::move(ko)) {}
 
 ConversionPath::~ConversionPath() {
-  LOG(7, "~ConversionPath");
+  LOG(Sev::Debug, "~ConversionPath");
   while (true) {
     auto x = transit.load();
     if (x == 0)
       break;
-    CLOG(7, 1, "~ConversionPath  still has transit {}", transit);
+    CLOG(Sev::Debug, 1, "~ConversionPath  still has transit {}", transit);
     sleep_ms(1000);
   }
 }
@@ -32,7 +32,7 @@ ConversionPath::~ConversionPath() {
 int ConversionPath::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
   auto fb = converter->convert(*up);
   if (fb == nullptr) {
-    CLOG(6, 1, "empty converted flat buffer");
+    CLOG(Sev::Info, 1, "empty converted flat buffer");
     return 1;
   }
   kafka_output->emit(std::move(fb));
@@ -68,10 +68,10 @@ Stream::Stream(std::shared_ptr<ForwarderInfo> finfo, ChannelInfo channel_info)
 Stream::Stream(ChannelInfo channel_info) : channel_info_(channel_info){};
 
 Stream::~Stream() {
-  CLOG(7, 2, "~Stream");
+  CLOG(Sev::Debug, 2, "~Stream");
   stop();
-  CLOG(7, 2, "~Stop DONE");
-  LOG(6, "seq_data_emitted: {}", seq_data_emitted.to_string());
+  CLOG(Sev::Debug, 2, "~Stop DONE  seq_data_emitted: {}",
+       seq_data_emitted.to_string());
 }
 
 int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
@@ -85,9 +85,8 @@ int Stream::converter_add(Kafka::InstanceSet &kset, Converter::sptr conv,
 }
 
 int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
-  // CLOG(9, 7, "Stream::emit");
   if (!up) {
-    CLOG(6, 1, "empty update?");
+    CLOG(Sev::Debug, 1, "empty update?");
     // should never happen, ignore
     return 0;
   }
@@ -99,27 +98,27 @@ int Stream::emit(std::unique_ptr<FlatBufs::EpicsPVUpdate> up) {
         break;
       }
       {
-        // CLOG(9, 1, "buffer full {} times", i1);
+        CLOG(Sev::Trace, 1, "buffer full {} times", i1);
         emit_queue.push_enlarge(up);
         break;
       }
     }
     if (up) {
       // here we are, saying goodbye to a good buffer
-      // LOG(4, "loosing buffer {}", up->seq_data);
+      LOG(Sev::Trace, "loosing buffer {}", up->seq_data);
       up.reset();
       return 1;
     }
     // auto s1 = emit_queue.to_vec();
-    // LOG(9, "Queue {}\n{}", channel_info.channel_name, s1.data());
+    // LOG(Sev::Trace, "Queue {}\n{}", channel_info.channel_name, s1.data());
   } else {
     // Emit directly
-    // LOG(9, "Stream::emit  convs: {}", conversion_paths.size());
+    // LOG(Sev::Trace, "Stream::emit  convs: {}", conversion_paths.size());
     for (auto &cp : conversion_paths) {
       cp->emit(std::move(up));
     }
   }
-  if (false) {
+  if (log_level >= Sev::Trace) {
     seq_data_emitted.insert(seq_data);
   }
   return 0;
@@ -138,18 +137,19 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
   uint32_t n3 = (std::min)(max, q2.capacity_unsafe() - q2.size_unsafe());
   uint32_t ncp = conversion_paths.size();
   std::vector<ConversionWorkPacket *> cwp_last(conversion_paths.size());
-  // LOG(8, "Stream::fill_conversion_work {}  {}  {}", n1, n2, n3);
+  LOG(Sev::Trace, "Stream::fill_conversion_work {}  {}  {}", n1, n2, n3);
   while (n0 < n2 && n3 - n1 >= ncp) {
-    // LOG(8, "Stream::fill_conversion_work  loop   {}  {}  {}", n1, n2, n3);
+    LOG(Sev::Trace, "Stream::fill_conversion_work  loop   {}  {}  {}", n1, n2,
+        n3);
     auto e = q1.pop_unsafe();
     n0 += 1;
     if (e.first != 0) {
-      CLOG(6, 1, "empty? should not happen");
+      CLOG(Sev::Debug, 1, "empty? should not happen");
       break;
     }
     auto &up = e.second;
     if (!up) {
-      LOG(6, "empty epics update");
+      LOG(Sev::Debug, "empty epics update");
       continue;
     }
     size_t cpid = 0;
@@ -168,7 +168,7 @@ Stream::fill_conversion_work(Ring<std::unique_ptr<ConversionWorkPacket>> &q2,
       }
       auto x = q2.push_unsafe(p);
       if (x != 0) {
-        CLOG(6, 1, "full? should not happen");
+        CLOG(Sev::Debug, 1, "full? should not happen");
         break;
       }
       cpid += 1;

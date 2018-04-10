@@ -385,11 +385,11 @@ class Converter : public MakeFlatBufferFromPVStructure {
 public:
   Converter() {
 #ifdef TRACK_SEQ_DATA
-    LOG(3, "Converter() with TRACK_SEQ_DATA");
+    LOG(Sev::Debug, "Converter() with TRACK_SEQ_DATA");
 #endif
   }
 
-  ~Converter() override { LOG(3, "~Converter"); }
+  ~Converter() override { LOG(Sev::Debug, "~Converter"); }
 
   BrightnESS::FlatBufs::FlatbufferMessage::uptr
   convert(EpicsPVUpdate const &up) override {
@@ -471,7 +471,7 @@ public:
           seq_data = static_cast<fwdinfo_1_t const *>(fi)->seq_data();
         }
       }
-      LOG(9, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
+      LOG(Sev::Trace, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
           up.seq_fwd, LogDataIdentifier(), b1.data(), b1.size());
     }
     return fb;

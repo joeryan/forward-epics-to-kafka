@@ -33,7 +33,10 @@ enum class Sev : int {
   Info = 6,  // Informational, general run time info for checking the state of
              // the application
   Debug = 7, // Debug, give me a flood of information
+  Trace = 8, // Even more information
 };
+
+bool operator>=(int a, Sev b);
 
 void dwlog_inner(int level, char const *file, int line, char const *func,
                  std::string const &s1);
@@ -48,7 +51,7 @@ void dwlog(Sev level, char const *fmt, char const *file, int line,
                 fmt::format(fmt, args...));
   } catch (fmt::FormatError &e) {
     dwlog_inner(static_cast<int>(level), file, line, func,
-                fmt::format("ERROR in format: {}: {}", e.what(), fmt));
+                fmt::format("Error in format: {}: {}", e.what(), fmt));
   }
 }
 

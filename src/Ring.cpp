@@ -29,7 +29,9 @@ template <typename TP> int Ring<TP>::resize(uint32_t n) {
 template <typename TP> int Ring<TP>::resize_unsafe(uint32_t n) {
   n = (std::min)(n, cap_max);
   if (n > capacity_unsafe()) {
-    // CLOG(7, 1, "resize {}", n);
+    if (log_level >= Sev::Trace) {
+      CLOG(Sev::Trace, 1, "resize {}", n);
+    }
     if (iW >= iR) {
       vec.resize(n + 1);
       iRmax = vec.size();
@@ -165,12 +167,12 @@ int32_t Ring<TP>::fill_from(Ring &r, uint32_t const max) {
   while (n1 < max && n1 < n3 && n1 < n2) {
     auto e = r.pop_unsafe();
     if (e.first != 0) {
-      LOG(7, "empty? should not happen");
+      LOG(Sev::Debug, "empty? should not happen");
       break;
     }
     auto x = push_unsafe(e.second);
     if (x != 0) {
-      LOG(7, "full? should not happen");
+      LOG(Sev::Debug, "full? should not happen");
       break;
     }
     n1 += 1;

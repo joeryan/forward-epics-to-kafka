@@ -222,7 +222,7 @@ PV_t make_PV_scalar(flatbuffers::FlatBufferBuilder &builder,
     return Make_Scalar<double>::convert(&builder, field);
   case S::pvString:
     // Sorry, not implemented yet
-    LOG(5, "ERROR pvString not implemented yet");
+    LOG(Sev::Error, "pvString not implemented yet");
     break;
   }
   return {PV::NTScalarByte, 0};
@@ -258,7 +258,7 @@ PV_t make_PV_scalar_array(flatbuffers::FlatBufferBuilder &builder,
     return Make_ScalarArray<double>::convert(&builder, field);
   case S::pvString:
     // Sorry, not implemented yet
-    LOG(5, "ERROR pvString not implemented yet");
+    LOG(Sev::Error, "pvString not implemented yet");
     break;
   }
   return {PV::NTScalarByte, 0};
@@ -267,7 +267,7 @@ PV_t make_PV_scalar_array(flatbuffers::FlatBufferBuilder &builder,
 PV_t make_PV(flatbuffers::FlatBufferBuilder &builder,
              epics::pvData::PVFieldPtr const &field) {
   if (!field) {
-    LOG(0, "ERROR can not do anything with a null pointer");
+    LOG(Sev::Error, "can not do anything with a null pointer");
     return {PV::NTScalarByte, 0};
   }
   // Check the type of 'value'
@@ -284,16 +284,16 @@ PV_t make_PV(flatbuffers::FlatBufferBuilder &builder,
     return make_PV_scalar_array(
         builder, static_cast<epics::pvData::PVScalarArray *>(field.get()));
   case T::structure:
-    LOG(5, "ERROR Type::structure can not be handled");
+    LOG(Sev::Error, "Type::structure can not be handled");
     break;
   case T::structureArray:
-    LOG(5, "ERROR Type::structureArray can not be handled");
+    LOG(Sev::Error, "Type::structureArray can not be handled");
     break;
   case T::union_:
-    LOG(5, "ERROR Type::union_ can not be handled");
+    LOG(Sev::Error, "Type::union_ can not be handled");
     break;
   case T::unionArray:
-    LOG(5, "ERROR Type::unionArray can not be handled");
+    LOG(Sev::Error, "Type::unionArray can not be handled");
     break;
   }
   return {PV::NTScalarByte, 0};
@@ -351,7 +351,7 @@ public:
               ->get());
       b.add_timeStamp(&timeStamp);
     } else {
-      LOG(5, "timeStamp not available");
+      LOG(Sev::Error, "timeStamp not available");
     }
 
     b.add_fwdinfo2_type(fwdinfo_u::fwdinfo_2_t);
@@ -361,7 +361,7 @@ public:
     if (log_level <= 0) {
       auto b1 = binary_to_hex((char const *)builder->GetBufferPointer(),
                               builder->GetSize());
-      LOG(7, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
+      LOG(Sev::Debug, "seq data/fwd: {} / {}  schema: [{}]\n{:.{}}", seq_data,
           up.seq_fwd, FlatBufs::f141_epics_nt::EpicsPVIdentifier(), b1.data(),
           b1.size());
     }

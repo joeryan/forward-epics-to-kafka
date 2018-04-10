@@ -95,7 +95,8 @@ int ConversionScheduler::fill(
     auto n1 = main->streams[sid]->fill_conversion_work(queue, nfm - nfc,
                                                        track_seq_data);
     if (n1 > 0) {
-      CLOG(7, 3, "Give worker {:2}  items: {:3}  stream: {:3}", wid, n1, sid);
+      CLOG(Sev::Debug, 3, "Give worker {:2}  items: {:3}  stream: {:3}", wid,
+           n1, sid);
     }
     nfc += n1;
     sid += 1;
@@ -109,7 +110,7 @@ int ConversionScheduler::fill(
 }
 
 ConversionScheduler::~ConversionScheduler() {
-  LOG(6, "~ConversionScheduler  seq_data_enqueued {}",
+  LOG(Sev::Debug, "~ConversionScheduler  seq_data_enqueued {}",
       seq_data_enqueued.to_string());
 }
 }
