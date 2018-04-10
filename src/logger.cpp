@@ -56,7 +56,7 @@ Logger::Logger() { is_tty = isatty(fileno(log_file)); }
 Logger::~Logger() {
   do_run_kafka = false;
   if (log_file != nullptr and log_file != stdout) {
-    LOG(0, "Closing log");
+    LOG(Sev::Info, "Closing log");
     fclose(log_file);
   }
   if (thread_poll.joinable()) {
@@ -70,9 +70,9 @@ void Logger::use_log_file(std::string fname) {
   is_tty = isatty(fileno(log_file));
 }
 
-void Logger::log_kafka_gelf_start(std::string address, std::string topicname) {
+void Logger::log_kafka_gelf_start(std::string Address, std::string topicname) {
   KafkaW::BrokerSettings BrokerSettings;
-  BrokerSettings.Address = address;
+  BrokerSettings.Address = Address;
   producer.reset(new KafkaW::Producer(BrokerSettings));
   topic.reset(new KafkaW::Producer::Topic(producer, topicname));
   topic->enableCopy();
