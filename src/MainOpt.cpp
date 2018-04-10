@@ -98,7 +98,7 @@ void MainOpt::parse_json_file(std::string ConfigurationFile) {
 void MainOpt::parse_document(const std::string &filepath) {
   std::ifstream ifs(filepath);
   if (!ifs.is_open()) {
-    LOG(3, "Could not open JSON file")
+    LOG(Sev::Error, "Could not open JSON file")
   }
   JSONConfiguration = nlohmann::json();
   ifs >> JSONConfiguration;
@@ -131,14 +131,14 @@ extractKafkaBrokerSettingsFromJSON(nlohmann::json const &JSONConfiguration) {
         }
         if (Property.value().is_string()) {
           auto Value = Property.value().get<std::string>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
+          LOG(Sev::Info, "kafka broker config {}: {}", Key, Value);
           Settings.ConfigurationStrings[Key] = Value;
         } else if (Property.value().is_number()) {
           auto Value = Property.value().get<int64_t>();
-          LOG(6, "kafka broker config {}: {}", Key, Value);
+          LOG(Sev::Info, "kafka broker config {}: {}", Key, Value);
           Settings.ConfigurationIntegers[Key] = Value;
         } else {
-          LOG(3, "can not understand option: {}", Key);
+          LOG(Sev::Warning, "can not understand option: {}", Key);
         }
       }
     }
@@ -193,7 +193,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
   } catch (CLI::CallForHelp const &e) {
     ret.first = 1;
   } catch (CLI::ParseError const &e) {
-    LOG(3, "Can not parse command line options: {}", e.what());
+    LOG(Sev::Error, "Can not parse command line options: {}", e.what());
     ret.first = 1;
   }
   if (ret.first == 1) {
@@ -204,7 +204,7 @@ std::pair<int, std::unique_ptr<MainOpt>> parse_opt(int argc, char **argv) {
     try {
       opt.parse_json_file(opt.ConfigurationFile);
     } catch (std::exception const &e) {
-      LOG(4, "Can not parse configuration file: {}", e.what());
+      LOG(Sev::Error, "Can not parse configuration file: {}", e.what());
       ret.first = 1;
       return ret;
     }
@@ -219,7 +219,7 @@ void MainOpt::init_logger() {
   if (!KafkaGELFAddress.empty()) {
     uri::URI uri(KafkaGELFAddress);
     log_kafka_gelf_start(uri.host, uri.topic);
-    LOG(3, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
+    LOG(Sev::Info, "Enabled kafka_gelf: //{}/{}", uri.host, uri.topic);
   }
   if (!GraylogLoggerAddress.empty()) {
     fwd_graylog_logger_enable(GraylogLoggerAddress);

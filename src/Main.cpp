@@ -49,11 +49,11 @@ Main::Main(MainOpt &opt)
 
   bool use_config = true;
   if (main_opt.BrokerConfig.topic.empty()) {
-    LOG(3, "Name for configuration topic is empty");
+    LOG(Sev::Warning, "Name for configuration topic is empty");
     use_config = false;
   }
   if (main_opt.BrokerConfig.host.empty()) {
-    LOG(3, "Host for configuration topic broker is empty");
+    LOG(Sev::Warning, "Host for configuration topic broker is empty");
     use_config = false;
   }
   if (use_config) {
@@ -68,7 +68,8 @@ Main::Main(MainOpt &opt)
       try {
         mappingAdd(Stream);
       } catch (std::exception &e) {
-        LOG(4, "Could not add mapping: {}  {}", Stream.dump(), e.what());
+        LOG(Sev::Error, "Could not add mapping: {}  {}", Stream.dump(),
+            e.what());
       }
     }
   }
@@ -83,7 +84,7 @@ Main::Main(MainOpt &opt)
 }
 
 Main::~Main() {
-  LOG(7, "~Main");
+  LOG(Sev::Debug, "~Main");
   streams.streams_clear();
   conversion_workers_clear();
   converters_clear();
@@ -111,12 +112,12 @@ ConfigCB::ConfigCB(Main &main) : main(main) {}
 
 void ConfigCB::operator()(std::string const &msg) {
   using nlohmann::json;
-  LOG(7, "Command received: {}", msg);
+  LOG(Sev::Info, "Command received: {}", msg);
   try {
     auto Document = json::parse(msg);
     handleParsedJSON(Document);
   } catch (...) {
-    LOG(3, "Command does not look like valid json: {}", msg);
+    LOG(Sev::Error, "Command does not look like valid json: {}", msg);
   }
 }
 
@@ -158,13 +159,13 @@ void ConfigCB::handleParsedJSON(nlohmann::json const &Document) {
     } else if (Command == "exit") {
       handleCommandExit(Document);
     } else {
-      LOG(6, "Can not understand command: {}", Command);
+      LOG(Sev::Warning, "Can not understand command: {}", Command);
     }
   }
 }
 
 int Main::conversion_workers_clear() {
-  CLOG(7, 1, "Main::conversion_workers_clear()  begin");
+  CLOG(Sev::Info, 1, "Main::conversion_workers_clear()  begin");
   std::unique_lock<std::mutex> lock(conversion_workers_mx);
   if (conversion_workers.size() > 0) {
     for (auto &x : conversion_workers) {
@@ -172,7 +173,7 @@ int Main::conversion_workers_clear() {
     }
     conversion_workers.clear();
   }
-  CLOG(7, 1, "Main::conversion_workers_clear()  end");
+  CLOG(Sev::Info, 1, "Main::conversion_workers_clear()  end");
   return 0;
 }
 
@@ -235,18 +236,18 @@ void Main::forward_epics_to_kafka() {
       report_stats(dt.count());
     }
     if (dt >= Dt) {
-      CLOG(3, 1, "slow main loop: {}", dt.count());
+      CLOG(Sev::Warning, 1, "slow main loop: {}", dt.count());
     } else {
       std::this_thread::sleep_for(Dt - dt);
     }
   }
   if (isStopDueToSignal(ForwardingRunFlag.load())) {
-    LOG(6, "Forwarder stopping due to signal.");
+    LOG(Sev::Info, "Forwarder stopping due to signal.");
   }
-  LOG(6, "Main::forward_epics_to_kafka   shutting down");
+  LOG(Sev::Info, "Main::forward_epics_to_kafka   shutting down");
   conversion_workers_clear();
   streams.streams_clear();
-  LOG(6, "ForwardingStatus::STOPPED");
+  LOG(Sev::Info, "ForwardingStatus::STOPPED");
   forwarding_status.store(ForwardingStatus::STOPPED);
 }
 
@@ -259,7 +260,7 @@ void Main::report_status() {
   }
   Status["streams"] = Streams;
   auto StatusString = Status.dump();
-  LOG(0, "status: {}", StatusString);
+  LOG(Sev::Info, "status: {}", StatusString);
   status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
 }
