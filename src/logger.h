@@ -6,16 +6,16 @@
 #ifdef _MSC_VER
 
 #define LOG(level, fmt, ...)                                                   \
-  dwlog(level, 0, fmt, __FILE__, __LINE__, __FUNCSIG__, __VA_ARGS__);
+  dwlog(level, fmt, __FILE__, __LINE__, __FUNCSIG__, __VA_ARGS__);
 #define CLOG(level, c, fmt, ...)                                               \
-  dwlog(level, 0, fmt, __FILE__, __LINE__, __FUNCSIG__, __VA_ARGS__);
+  dwlog(level, fmt, __FILE__, __LINE__, __FUNCSIG__, __VA_ARGS__);
 
 #else
 
 #define LOG(level, fmt, args...)                                               \
-  dwlog(level, 0, fmt, __FILE__, __LINE__, __PRETTY_FUNCTION__, ##args);
+  dwlog(level, fmt, __FILE__, __LINE__, __PRETTY_FUNCTION__, ##args);
 #define CLOG(level, c, fmt, args...)                                           \
-  dwlog(level, 0, fmt, __FILE__, __LINE__, __PRETTY_FUNCTION__, ##args);
+  dwlog(level, fmt, __FILE__, __LINE__, __PRETTY_FUNCTION__, ##args);
 
 #endif
 
@@ -35,19 +35,19 @@ enum class Sev : int {
   Debug = 7, // Debug, give me a flood of information
 };
 
-void dwlog_inner(int level, int c, char const *file, int line, char const *func,
+void dwlog_inner(int level, char const *file, int line, char const *func,
                  std::string const &s1);
 
 template <typename... TT>
-void dwlog(Sev level, int c, char const *fmt, char const *file, int line,
+void dwlog(Sev level, char const *fmt, char const *file, int line,
            char const *func, TT const &... args) {
   if (static_cast<int>(level) > log_level)
     return;
   try {
-    dwlog_inner(static_cast<int>(level), c, file, line, func,
+    dwlog_inner(static_cast<int>(level), file, line, func,
                 fmt::format(fmt, args...));
   } catch (fmt::FormatError &e) {
-    dwlog_inner(static_cast<int>(level), c, file, line, func,
+    dwlog_inner(static_cast<int>(level), file, line, func,
                 fmt::format("ERROR in format: {}: {}", e.what(), fmt));
   }
 }
