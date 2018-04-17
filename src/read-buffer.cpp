@@ -43,34 +43,6 @@ template <typename T0> void print_array(EpicsPV const *b1) {
   }
 }
 
-std::vector<char> gulp(FILE *f1) {
-  std::vector<char> ret;
-  uint32_t cap = 4096;
-  uint32_t c1 = 0;
-  ret.reserve(cap);
-  while (true) {
-    auto d1 = cap - c1;
-    auto n1 = fread(ret.data() + c1, 1, d1, f1);
-    if (n1 > 0) {
-      LOG(2, "read n1 {}", n1);
-    } else {
-      if (feof(f1)) {
-        break;
-      }
-      if (ferror(f1)) {
-        LOG(2, "error on file read");
-        break;
-      }
-    }
-    if (2 * c1 / cap >= 1) {
-      LOG(2, "re");
-      cap = 4 * cap / 3;
-      ret.reserve(cap);
-    }
-  }
-  return ret;
-}
-
 int main(int argc, char **argv) {
   using namespace BrightnESS::ForwardEpicsToKafka::Epics;
   using BrightnESS::ForwardEpicsToKafka::Epics::PV;
@@ -81,22 +53,22 @@ int main(int argc, char **argv) {
   // std::vector<char> buf2;
   // fclose(f1);
   auto hex = binary_to_hex(buf1.data(), buf1.size());
-  LOG(2, "buf1: {:.{}}", hex.data(), hex.size());
+  LOG(Sev::Debug, "buf1: {:.{}}", hex.data(), hex.size());
   auto b1 = GetEpicsPV(buf1.data());
   if (b1->pv_type() == PV::NTScalarShort) {
     auto pv = static_cast<NTScalarShort const *>(b1->pv());
     short sv = pv->value();
-    LOG(2, "short [{}] value: {}", sizeof(sv), sv);
+    LOG(Sev::Debug, "short [{}] value: {}", sizeof(sv), sv);
     auto hex = binary_to_hex((char *)&sv, sizeof(sv));
     LOG(2, "short binary: {:.{}}", hex.data(), hex.size());
   }
   if (b1->pv_type() == PV::NTScalarDouble) {
     auto pv = static_cast<NTScalarDouble const *>(b1->pv());
-    LOG(2, "double value: {}", pv->value());
+    LOG(Sev::Debug, "double value: {}", pv->value());
   }
   if (b1->pv_type() == PV::NTScalarFloat) {
     auto pv = static_cast<NTScalarFloat const *>(b1->pv());
-    LOG(2, "float value: {}", pv->value());
+    LOG(Sev::Debug, "float value: {}", pv->value());
   }
   if (b1->pv_type() == PV::NTScalarArrayDouble) {
     print_array<NTScalarArrayDouble>(b1);

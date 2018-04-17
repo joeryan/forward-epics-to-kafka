@@ -44,13 +44,10 @@ int ConversionWorker::run() {
   auto Dt = MS(100);
   auto t1 = CLK::now();
   while (do_run) {
-    // CLOG(7, 4, "ConversionWorker  {}  RUNLOOP", id);
     auto qs = queue.size();
     if (qs == 0) {
       auto qf = queue.capacity() - qs;
       scheduler->fill(queue, qf, id);
-      // auto s1 = queue.to_vec();
-      // LOG(7, "got {} new packets:\n{}", n1, s1.data());
     }
     while (true) {
       auto p = queue.pop();
