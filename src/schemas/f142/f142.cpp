@@ -235,6 +235,27 @@ public:
   }
 };
 
+class Make_ScalarArrayString {
+public:
+  using T0 = std::string;
+  using T1 = ArrayStringBuilder;
+
+  static Value_t convert(flatbuffers::FlatBufferBuilder *Builder,
+                         epics::pvData::PVScalarArray *field_, uint8_t opts) {
+    auto Field = static_cast<epics::pvData::PVValueArray<T0> *>(field_);
+    Field->setImmutable();
+    auto SharedVectorEPICS = Field->view();
+    std::vector<std::string> StringsAsSTLVector;
+    for (auto const &String : SharedVectorEPICS) {
+      StringsAsSTLVector.push_back(String);
+    }
+    auto FlatbufferValue = Builder->CreateVectorOfStrings(StringsAsSTLVector);
+    T1 ValueBuilder(*Builder);
+    ValueBuilder.add_value(FlatbufferValue);
+    return {BuilderType_to_Enum_Value<T1>::v(), ValueBuilder.Finish().Union()};
+  }
+};
+
 } // end namespace PVStructureToFlatBufferN
 
 Value_t make_Value_scalar(flatbuffers::FlatBufferBuilder &builder,
@@ -306,6 +327,8 @@ Value_t make_Value_array(flatbuffers::FlatBufferBuilder &builder,
   case S::pvDouble:
     return Make_ScalarArray<double>::convert(&builder, field, opts);
   case S::pvString:
+    return Make_ScalarArrayString::convert(&builder, field, opts);
+  default:
     ++statistics.err_not_implemented_yet;
     break;
   }
