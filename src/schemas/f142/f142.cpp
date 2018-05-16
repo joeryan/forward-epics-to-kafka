@@ -178,40 +178,23 @@ public:
 
 template <typename T0> class Make_ScalarArray {
 public:
-  using T1 = typename std::conditional<
-      std::is_same<T0, epics::pvData::boolean>::value, ArrayByteBuilder,
-      typename std::conditional<
-          std::is_same<T0, int8_t>::value, ArrayByteBuilder,
-          typename std::conditional<
-              std::is_same<T0, int16_t>::value, ArrayShortBuilder,
-              typename std::conditional<
-                  std::is_same<T0, int32_t>::value, ArrayIntBuilder,
-                  typename std::conditional<
-                      std::is_same<T0, int64_t>::value, ArrayLongBuilder,
-                      typename std::conditional<
-                          std::is_same<T0, uint8_t>::value, ArrayUByteBuilder,
-                          typename std::conditional<
-                              std::is_same<T0, uint16_t>::value,
-                              ArrayUShortBuilder,
-                              typename std::conditional<
-                                  std::is_same<T0, uint32_t>::value,
-                                  ArrayUIntBuilder,
-                                  typename std::conditional<
-                                      std::is_same<T0, uint64_t>::value,
-                                      ArrayULongBuilder,
-                                      typename std::conditional<
-                                          std::is_same<T0, float>::value,
-                                          ArrayFloatBuilder,
-                                          typename std::conditional<
-                                              std::is_same<T0, double>::value,
-                                              ArrayDoubleBuilder,
-                                              std::nullptr_t>::type>::type>::
-                                      type>::type>::type>::type>::type>::type>::
-              type>::type>::type;
+  // clang-format off
+  using T1 =
+    typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, ArrayByteBuilder,
+    typename std::conditional<std::is_same<T0,   int8_t>::value, ArrayByteBuilder,
+    typename std::conditional<std::is_same<T0,  int16_t>::value, ArrayShortBuilder,
+    typename std::conditional<std::is_same<T0,  int32_t>::value, ArrayIntBuilder,
+    typename std::conditional<std::is_same<T0,  int64_t>::value, ArrayLongBuilder,
+    typename std::conditional<std::is_same<T0,  uint8_t>::value, ArrayUByteBuilder,
+    typename std::conditional<std::is_same<T0, uint16_t>::value, ArrayUShortBuilder,
+    typename std::conditional<std::is_same<T0, uint32_t>::value, ArrayUIntBuilder,
+    typename std::conditional<std::is_same<T0, uint64_t>::value, ArrayULongBuilder,
+    typename std::conditional<std::is_same<T0,    float>::value, ArrayFloatBuilder,
+    typename std::conditional<std::is_same<T0,   double>::value, ArrayDoubleBuilder,
+    std::nullptr_t>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type;
 
-  using T3 =
-      typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value,
-                                signed char, T0>::type;
+  using T3 = typename std::conditional<std::is_same<T0, epics::pvData::boolean>::value, signed char, T0>::type;
+  // clang-format on
 
   static Value_t convert(flatbuffers::FlatBufferBuilder *builder,
                          epics::pvData::PVScalarArray *field_, uint8_t opts) {
