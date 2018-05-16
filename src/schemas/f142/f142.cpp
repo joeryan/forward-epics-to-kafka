@@ -143,6 +143,10 @@ template <>
 struct BuilderType_to_Enum_Value<ArrayDoubleBuilder> : public Enum_Value_Base {
   static Value v() { return Value::ArrayDouble; }
 };
+template <>
+struct BuilderType_to_Enum_Value<ArrayStringBuilder> : public Enum_Value_Base {
+  static Value v() { return Value::ArrayString; }
+};
 
 template <typename T0> class Make_Scalar {
 public:
