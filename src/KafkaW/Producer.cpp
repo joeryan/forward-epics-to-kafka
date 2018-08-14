@@ -13,13 +13,13 @@ void Producer::deliveredCallback(rd_kafka_t *rk, rd_kafka_message_t const *msg,
                                  void *opaque) {
   auto self = reinterpret_cast<Producer *>(opaque);
   if (!msg) {
-    LOG(Sev::Error, "IID: {}  ERROR msg should never be null", self->id);
+    LOG(Sev::Error, "IID: {}  msg should never be null", self->id);
     ++self->Stats.produce_cb_fail;
     return;
   }
   if (msg->err) {
-    LOG(Sev::Error, "IID: {}  ERROR on delivery, {}, topic {}, {} [{}] {}",
-        self->id, rd_kafka_name(rk), rd_kafka_topic_name(msg->rkt),
+    LOG(Sev::Error, "IID: {}  on delivery, {}, topic {}, {} [{}] {}", self->id,
+        rd_kafka_name(rk), rd_kafka_topic_name(msg->rkt),
         rd_kafka_err2name(msg->err), msg->err, rd_kafka_err2str(msg->err));
     if (msg->err == RD_KAFKA_RESP_ERR__MSG_TIMED_OUT) {
       // TODO
@@ -42,13 +42,14 @@ void Producer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
   UNUSED_ARG(rk);
   auto self = reinterpret_cast<Producer *>(opaque);
   auto err = static_cast<rd_kafka_resp_err_t>(err_i);
-  Sev ll = Sev::Warning;
+  Sev ll = Sev::Error;
   if (err == RD_KAFKA_RESP_ERR__TRANSPORT) {
     ll = Sev::Error;
     // rd_kafka_dump(stdout, rk);
   } else {
-    if (self->on_error)
+    if (self->on_error) {
       self->on_error(self, err);
+    }
   }
   LOG(ll, "Kafka cb_error id: {}  broker: {}  errno: {}  errorname: {}  "
           "errorstring: {}  message: {}",
@@ -59,7 +60,7 @@ void Producer::errorCallback(rd_kafka_t *rk, int err_i, char const *msg,
 int Producer::statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
                             void *opaque) {
   auto self = reinterpret_cast<Producer *>(opaque);
-  LOG(Sev::Debug, "IID: {}  INFO cb_stats {} length {}   {:.{}}", self->id,
+  LOG(Sev::Debug, "IID: {}  cb_stats {} length {}   {:.{}}", self->id,
       rd_kafka_name(rk), json_len, json, json_len);
   // What does librdkafka want us to return from this callback?
   return 0;
@@ -67,9 +68,9 @@ int Producer::statsCallback(rd_kafka_t *rk, char *json, size_t json_len,
 
 void Producer::logCallback(rd_kafka_t const *rk, int level, char const *fac,
                            char const *buf) {
-  UNUSED_ARG(level);
   auto self = reinterpret_cast<Producer *>(rd_kafka_opaque(rk));
-  LOG(Sev::Debug, "IID: {}  {}  fac: {}", self->id, buf, fac);
+  LOG(Sev::Warning, "IID: {}  level: {}  {}  fac: {}", self->id, level, buf,
+      fac);
 }
 
 void Producer::throttleCallback(rd_kafka_t *rk, char const *broker_name,
