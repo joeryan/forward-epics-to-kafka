@@ -78,6 +78,24 @@ Forwarder::Forwarder(MainOpt &opt)
     KafkaW::BrokerSettings BrokerSettings;
     BrokerSettings.Address = main_opt.MainSettings.StatusReportURI.host_port;
     status_producer = std::make_shared<KafkaW::Producer>(BrokerSettings);
+    status_producer->on_delivery_ok =
+        std::function<void(rd_kafka_message_t const *)>(
+            [](rd_kafka_message_t const *Msg) {
+              if (auto x = Msg->_private) {
+                auto p = std::unique_ptr<KafkaW::Producer::Msg>(
+                    static_cast<KafkaW::Producer::Msg *>(x));
+                p->deliveryOk();
+              }
+            });
+    status_producer->on_delivery_failed =
+        std::function<void(rd_kafka_message_t const *)>(
+            [](rd_kafka_message_t const *Msg) {
+              if (auto x = Msg->_private) {
+                auto p = std::unique_ptr<KafkaW::Producer::Msg>(
+                    static_cast<KafkaW::Producer::Msg *>(x));
+                p->deliveryError();
+              }
+            });
     status_producer_topic = ::make_unique<KafkaW::ProducerTopic>(
         status_producer, main_opt.MainSettings.StatusReportURI.topic);
   }
