@@ -214,6 +214,9 @@ void Forwarder::forward_epics_to_kafka() {
 
 void Forwarder::report_status() {
   using nlohmann::json;
+  if (DebugReportStatus) {
+    LOG(Sev::Warning, "Report status start.");
+  }
   auto Status = json::object();
   auto Streams = json::array();
   for (auto const &Stream : streams.getStreams()) {
@@ -230,8 +233,14 @@ void Forwarder::report_status() {
   } else {
     LOG(Sev::Debug, "status: {}", StatusString);
   }
+  if (DebugReportStatus) {
+    LOG(Sev::Warning, "Report status producing...");
+  }
   status_producer_topic->produce((KafkaW::uchar *)StatusString.c_str(),
                                  StatusString.size());
+  if (DebugReportStatus) {
+    LOG(Sev::Warning, "Report status finish.");
+  }
 }
 
 void Forwarder::report_stats(int dt) {
