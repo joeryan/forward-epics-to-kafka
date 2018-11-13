@@ -9,6 +9,7 @@ streaming-data-types/d429d55@ess-dmsc/stable
 cli11/1.5.3@bincrafters/stable
 jsonformoderncpp/3.1.0@vthiery/stable
 concurrentqueue/8f7e861@ess-dmsc/stable
+cmake_installer/3.10.0@conan/stable
 
 [generators]
 cmake
