@@ -83,22 +83,22 @@ public:
 
   std::string to_string() {
     std::unique_lock<std::mutex> lock(Mutex);
-    fmt::MemoryWriter mw;
-    mw.write("[");
+    fmt::memory_buffer Buffer;
+    fmt::format_to(Buffer, "[");
     int i1 = 0;
     for (auto &x : set) {
       if (i1 > 0) {
-        mw.write(", ");
+        fmt::format_to(Buffer, ", ");
       }
-      mw.write("[{}, {}]", x.a, x.b);
+      fmt::format_to(Buffer, "[{}, {}]", x.a, x.b);
       ++i1;
       if (i1 > 100) {
-        mw.write(" ...");
+        fmt::format_to(Buffer, " ...");
         break;
       }
     }
-    mw.write("]\0");
-    return std::string(mw.c_str());
+    fmt::format_to(Buffer, "]\0");
+    return fmt::to_string(Buffer);
   }
 
   std::set<Range<T>> set;

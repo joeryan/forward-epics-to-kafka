@@ -21,7 +21,7 @@ public:
   ~CURLReporter();
   /// Delivers a message in form of the given MemoryWriter.
   /// If CURL is not available, this is a no-op.
-  void send(fmt::MemoryWriter &MemoryWriter, std::string const &URL);
+  void send(std::string const &Message, std::string const &URL);
 };
 
 #if HAVE_CURL
@@ -31,14 +31,13 @@ CURLReporter::CURLReporter() { curl_global_init(CURL_GLOBAL_ALL); }
 
 CURLReporter::~CURLReporter() { curl_global_cleanup(); }
 
-void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
-                        std::string const &URL) {
+void CURLReporter::send(std::string const &Message, std::string const &URL) {
   CURL *curl;
   CURLcode res;
   curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, MemoryWriter.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, Message);
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
       LOG(Sev::Notice, "curl_easy_perform() failed: {}",
@@ -55,8 +54,7 @@ CURLReporter::CURLReporter() {}
 
 CURLReporter::~CURLReporter() {}
 
-void CURLReporter::send(fmt::MemoryWriter &MemoryWriter,
-                        std::string const &URL) {
+void CURLReporter::send(std::string const &Message, std::string const &URL) {
   UNUSED_ARG(MemoryWriter);
   UNUSED_ARG(URL);
 }

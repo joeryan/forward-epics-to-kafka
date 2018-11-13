@@ -235,7 +235,8 @@ void Forwarder::report_status() {
 }
 
 void Forwarder::report_stats(int dt) {
-  fmt::MemoryWriter influxbuf;
+  using fmt::format_to;
+  fmt::memory_buffer InfluxMessage;
   auto m1 = g__total_msgs_to_kafka.load();
   auto m2 = m1 / 1000;
   m1 = m1 % 1000;
@@ -249,19 +250,31 @@ void Forwarder::report_stats(int dt) {
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
-      auto &m1 = influxbuf;
-      m1.write("forward-epics-to-kafka,hostname={},set={}",
-               main_opt.Hostname.data(), i1);
-      m1.write(" produced={}", s.produced);
-      m1.write(",produce_fail={}", s.produce_fail);
-      m1.write(",local_queue_full={}", s.local_queue_full);
-      m1.write(",produce_cb={}", s.produce_cb);
-      m1.write(",produce_cb_fail={}", s.produce_cb_fail);
-      m1.write(",poll_served={}", s.poll_served);
-      m1.write(",msg_too_large={}", s.msg_too_large);
-      m1.write(",produced_bytes={}", double(s.produced_bytes));
-      m1.write(",outq={}", s.out_queue);
-      m1.write("\n");
+      auto &B = InfluxMessage;
+      // clang-format off
+      format_to(B,
+        "forward-epics-to-kafka,hostname={},set={}",
+        " produced={}"
+        ",produce_fail={}"
+        ",local_queue_full={}"
+        ",produce_cb={}"
+        ",produce_cb_fail={}"
+        ",poll_served={}"
+        ",msg_too_large={}"
+        ",produced_bytes={}"
+        ",outq={}\n",
+        main_opt.Hostname.data(), i1,
+        s.produced,
+        s.produce_fail,
+        s.local_queue_full,
+        s.produce_cb,
+        s.produce_cb_fail,
+        s.poll_served,
+        s.msg_too_large,
+        double(s.produced_bytes),
+        s.out_queue
+      );
+      // clang-format on
       ++i1;
     }
     {
@@ -270,24 +283,23 @@ void Forwarder::report_stats(int dt) {
       i1 = 0;
       for (auto &c : converters) {
         auto stats = c.second.lock()->stats();
-        auto &m1 = influxbuf;
-        m1.write("forward-epics-to-kafka,hostname={},set={}",
-                 main_opt.Hostname.data(), i1);
+        format_to(InfluxMessage, "forward-epics-to-kafka,hostname={},set={}",
+                  main_opt.Hostname.data(), i1);
         int i2 = 0;
         for (auto x : stats) {
           if (i2 > 0) {
-            m1.write(",");
+            format_to(InfluxMessage, ",");
           } else {
-            m1.write(" ");
+            format_to(InfluxMessage, " ");
           }
-          m1.write("{}={}", x.first, x.second);
+          format_to(InfluxMessage, "{}={}", x.first, x.second);
           ++i2;
         }
-        m1.write("\n");
+        format_to(InfluxMessage, "\n");
         ++i1;
       }
     }
-    curl->send(influxbuf, main_opt.InfluxURI);
+    curl->send(fmt::to_string(InfluxMessage), main_opt.InfluxURI);
   }
 }
 
