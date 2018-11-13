@@ -250,9 +250,8 @@ void Forwarder::report_stats(int dt) {
   if (CURLReporter::HaveCURL && !main_opt.InfluxURI.empty()) {
     int i1 = 0;
     for (auto &s : kafka_instance_set->stats_all()) {
-      auto &B = InfluxMessage;
       // clang-format off
-      format_to(B,
+      format_to(InfluxMessage,
         "forward-epics-to-kafka,hostname={},set={}",
         " produced={}"
         ",produce_fail={}"
