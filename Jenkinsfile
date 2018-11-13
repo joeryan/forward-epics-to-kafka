@@ -112,6 +112,7 @@ def docker_cmake(image_key) {
         def configure_script = """
                     cd build
                     ${configure_epics}
+                    . ./activate_run.sh
                     cmake ../${project} ${coverage_on}
                 """
 
@@ -126,6 +127,7 @@ def docker_cmake_release(image_key) {
         def custom_sh = images[image_key]['sh']
         def configure_script = """
                         cd build
+                        . ./activate_run.sh
                         cmake ../${project} \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_SKIP_RPATH=FALSE \
@@ -333,13 +335,14 @@ def get_win10_pipeline() {
             --build=outdated"""
         }  // stage
 
-	 stage("win10: Build") {
-           bat """cd _build
-	     cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
-	     cmake --build .
-	     """
-        }  // stage
-      }  // dir
+          stage("win10: Build") {
+            bat """cd _build
+            . ./activate_run.sh
+            cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
+            cmake --build .
+            """
+          }  // stage
+        }  // dir
       }
     }  // node
   }  // return
