@@ -19,5 +19,5 @@ set(sources
 add_executable(${tgt} ${sources})
 add_dependencies(${tgt} flatbuffers_generate)
 target_include_directories(${tgt} PRIVATE ${path_include_common})
-target_link_libraries(${tgt} ${libraries_common})
+target_link_libraries(${tgt} ${libraries_common} fmt::fmt)
 add_gtest_to_target(${tgt})
