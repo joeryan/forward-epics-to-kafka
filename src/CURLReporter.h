@@ -55,7 +55,7 @@ CURLReporter::CURLReporter() {}
 CURLReporter::~CURLReporter() {}
 
 void CURLReporter::send(std::string const &Message, std::string const &URL) {
-  UNUSED_ARG(MemoryWriter);
+  UNUSED_ARG(Message);
   UNUSED_ARG(URL);
 }
 
