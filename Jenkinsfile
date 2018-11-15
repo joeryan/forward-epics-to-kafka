@@ -112,8 +112,9 @@ def docker_cmake(image_key) {
         def configure_script = """
                     cd build
                     ${configure_epics}
+                    conan install --build=outdated ../conan/conanfile.txt
                     . ./activate_run.sh
-                    cmake ../${project} ${coverage_on}
+                    cmake -DCONAN=MANUAL ../${project} ${coverage_on}
                 """
 
         sh "docker exec ${container_name(image_key)} ${custom_sh} -c \"${configure_script}\""
@@ -127,8 +128,9 @@ def docker_cmake_release(image_key) {
         def custom_sh = images[image_key]['sh']
         def configure_script = """
                         cd build
+                        conan install --build=outdated ../conan/conanfile.txt
                         . ./activate_run.sh
-                        cmake ../${project} \
+                        cmake -DCONAN=MANUAL ../${project} \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_SKIP_RPATH=FALSE \
                             -DCMAKE_INSTALL_RPATH='\\\\\\\$ORIGIN/../lib' \
@@ -337,8 +339,9 @@ def get_win10_pipeline() {
 
           stage("win10: Build") {
             bat """cd _build
+            conan install --build=outdated ../conan/conanfile.txt
             . ./activate_run.sh
-            cmake .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
+            cmake -DCONAN=MANUAL .. -G \"Visual Studio 15 2017 Win64\" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=FALSE
             cmake --build .
             """
           }  // stage
