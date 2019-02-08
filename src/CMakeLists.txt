@@ -184,7 +184,7 @@ elseif(NOT GRAYLOGLOGGER_FOUND AND USE_GRAYLOG_LOGGER)
 endif()
 
 target_link_libraries(${tgt} ${libraries_common})
-
+target_link_libraries(${tgt} -static-libgcc -static-libstdc++)
 if (have_gtest)
 add_subdirectory(tests)
 endif()
